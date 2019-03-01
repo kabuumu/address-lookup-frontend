@@ -1,11 +1,11 @@
 package services
 
 import javax.inject.Singleton
-
 import com.google.inject.ImplementedBy
-import com.typesafe.config.{ConfigObject, ConfigValue}
+import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
 import config.AddressLookupFrontendSessionCache
 import model._
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.cache.client.HttpCaching
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -55,78 +55,22 @@ class KeystoreJourneyRepository extends JourneyRepository with ServicesConfig {
     }
   }
 
-  private def maybeString(v: ConfigValue): Option[String] = {
-    if (v == null) None
-    else Some(v.unwrapped().toString)
-  }
-
-  private def maybeInt(v: ConfigValue): Option[Int] = {
-    if (v == null) None
-    else Some(v.unwrapped().asInstanceOf[Int])
-  }
-
-  private def mustBeString(v: ConfigValue, key: String): String = {
-    if (v == null) throw new IllegalArgumentException(s"$key must not be null")
-    else v.unwrapped().toString
-  }
-
-  private def maybeBoolean(v: ConfigValue, default: Boolean): Option[Boolean] = {
-    if (v == null) Some(default)
-    else Some(v.unwrapped().asInstanceOf[Boolean])
-  }
-
-  private def maybeSetOfStrings(v: ConfigValue, key: String): Option[Set[String]] = {
-    if (v == null) None
-    else v.unwrapped() match {
-      case list: java.util.List[_] => Some(list.asScala.map(_.toString).toSet)
-      case item: String => Some(Set(item))
-      case _ => throw new IllegalArgumentException(s"$key must be a list of strings")
-    }
-  }
-
-  // TODO ensure all potential config values are mapped
   private def journey(key: String, journeys: ConfigObject): JourneyData = {
-    val j = journeys.get(key).asInstanceOf[ConfigObject]
-    val l = Option(j.get("lookupPage").asInstanceOf[ConfigObject])
-    val s = Option(j.get("selectPage").asInstanceOf[ConfigObject])
-    val c = Option(j.get("confirmPage").asInstanceOf[ConfigObject])
-    val e = Option(j.get("editPage").asInstanceOf[ConfigObject])
-    val lookup = l match {
-      case Some(l) => LookupPage(maybeString(l.get("title")), maybeString(l.get("heading")), maybeString(l.get("filterLabel")), maybeString(l.get("postcodeLabel")), maybeString(l.get("submitLabel")), maybeString(l.get("resultLimitExceededMessage")), maybeString(l.get("noResultsFoundMessage")), maybeString(l.get("manualAddress")))
-      case None => LookupPage()
-    }
-    val select = s match {
-      case Some(s) => SelectPage(maybeString(s.get("title")), maybeString(s.get("heading")), maybeString(s.get("headingWithPostcode")), maybeString(s.get("proposalListLabel")), maybeString(s.get("submitLabel")), maybeInt(s.get("proposalListLimit")), maybeBoolean(s.get("showSearchAgainLink"), false), maybeString(s.get("searchAgainLinkText")), maybeString(s.get("editAddressLinkText")))
-      case None => SelectPage()
-    }
-    val confirm = c match {
-      case Some(c) => ConfirmPage(maybeString(c.get("title")), maybeString(c.get("heading")), maybeBoolean(c.get("showSubHeadingAndInfo"), false), maybeString(c.get("infoSubheading")), maybeString(c.get("infoMessage")), maybeString(c.get("submitLabel")), maybeBoolean(c.get("showSearchAgainLink"), false), maybeString(c.get("searchAgainLinkText")), maybeBoolean(c.get("showChangeLink"), true), maybeString(c.get("changeLinkText")))
-      case None => ConfirmPage()
-    }
-    val edit = e match {
-      case Some(e) => EditPage(maybeString(e.get("title")), maybeString(e.get("heading")), maybeString(e.get("line1Label")), maybeString(e.get("line2Label")), maybeString(e.get("line3Label")), maybeString(e.get("townLabel")), maybeString(e.get("postcodeLabel")), maybeString(e.get("countryLabel")), maybeString(e.get("submitLabel")))
-      case None => EditPage()
-    }
-    JourneyData(
-      config = JourneyConfig(
-        continueUrl = mustBeString(j.get("continueUrl"), "continueUrl"),
-        homeNavHref = maybeString(j.get("homeNavHref")),
-        navTitle = maybeString(j.get("navTitle")),
-        additionalStylesheetUrl = maybeString(j.get("additionalStylesheetUrl")),
-        lookupPage = Some(lookup),
-        selectPage = Some(select),
-        confirmPage = Some(confirm),
-        editPage = Some(edit),
-        showPhaseBanner = maybeBoolean(j.get("showPhaseBanner"), false),
-        alphaPhase = maybeBoolean(j.get("alphaPhase"), false),
-        phaseFeedbackLink = maybeString(j.get("phaseFeedbackLink")),
-        phaseBannerHtml = maybeString(j.get("phaseBannerHtml")),
-        showBackButtons = maybeBoolean(j.get("showBackButtons"), false),
-        includeHMRCBranding = maybeBoolean(j.get("includeHMRCBranding"), true),
-        deskProServiceName = maybeString(j.get("deskProServiceName")),
-        allowedCountryCodes = maybeSetOfStrings(j.get("allowedCountryCodes"), "allowedCountryCodes")
-      )
-    )
+    import model.JourneyData._
+
+    val renderOptions =
+      ConfigRenderOptions.defaults()
+        .setJson(true)
+        .setComments(false)
+        .setOriginComments(false)
+
+    val journeyConfigJson = journeys
+      .get(key)
+      .render(renderOptions)
+
+    val journeyConfig = Json.fromJson[JourneyConfig](Json.parse(journeyConfigJson)).get
+
+    JourneyData(journeyConfig)
   }
 
 }
