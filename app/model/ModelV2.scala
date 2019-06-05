@@ -11,10 +11,13 @@ case class JourneyDataV2(
                           proposals: Option[Seq[ProposedAddress]] = None,
                           selectedAddress: Option[ConfirmableAddress] = None,
                           confirmedAddress: Option[ConfirmableAddress] = None
-                        )
+                        ) {
+  val resolvedConfigV2 = ResolvedJourneyConfigV2(config)
+}
 
 object JourneyDataV2 {
   implicit val format: Format[JourneyDataV2] = Json.format[JourneyDataV2]
+
 }
 
 case class JourneyConfigV2(
@@ -26,7 +29,7 @@ case class JourneyConfigV2(
 case class ResolvedJourneyConfigV2(journeyConfig: JourneyConfigV2) {
   val version: Int = journeyConfig.version
   val options: ResolvedJourneyOptions = ResolvedJourneyOptions(journeyConfig.options)
-  val labels: ResolvedJourneyLabels = ResolvedJourneyLabels(journeyConfig.labels.getOrElse(JourneyLabels()), options.phaseFeedbackLink)
+  def labels(enLangFlag: Boolean): ResolvedLanguageLabels = ResolvedJourneyLabels(journeyConfig.labels.getOrElse(JourneyLabels()), options.phaseFeedbackLink).en
 }
 
 object JourneyConfigV2 {
