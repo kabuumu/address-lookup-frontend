@@ -9,6 +9,7 @@ import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeApplication
 import uk.gov.hmrc.address.v2.Country
+import views.html.helper.options
 
 class AddressLookupControllerISpec extends IntegrationSpecBase {
 
@@ -188,11 +189,11 @@ class AddressLookupControllerISpec extends IntegrationSpecBase {
       testElementExists(res, EditPage.nonUkEditId)
     }
     s"return 303 if form is valid and redirect to ${controllers.routes.AddressLookupController.confirm("")}" in {
-      stubKeystore(testJourneyId, Json.toJson(testJourneyDataWithMinimalJourneyConfig.copy(config = testJourneyDataWithMinimalJourneyConfig.config.copy(ukMode = Some(false)))).as[JsObject], OK)
+      stubKeystore(testJourneyId, Json.toJson(journeyDataV2Minimal.copy(config = journeyDataV2Minimal.config.copy(options = journeyDataV2Minimal.config.options.copy(ukMode = Some(false))))).as[JsObject], OK)
       stubKeystoreSave(
         testJourneyId,
-        Json.toJson(testJourneyDataWithMinimalJourneyConfig.copy(
-          config = testJourneyDataWithMinimalJourneyConfig.config.copy(ukMode = Some(false)),
+        Json.toJson(journeyDataV2Minimal.copy(
+          config = journeyDataV2Minimal.config.copy(options = journeyDataV2Minimal.config.options.copy(ukMode = Some(false))),
           selectedAddress = Some(testConfirmedAddress.copy(id = None))
         )),
         OK
@@ -232,20 +233,20 @@ class AddressLookupControllerISpec extends IntegrationSpecBase {
     "return 303 if form is valid and redirect to Confirm" in {
       stubKeystore(
         session = testJourneyId,
-        theData = Json.toJson(testJourneyDataWithMinimalJourneyConfig.copy(
-          config = testJourneyDataWithMinimalJourneyConfig.config.copy(ukMode = Some(false)))),
+        theData = Json.toJson(journeyDataV2Minimal.copy(
+          config = journeyDataV2Minimal.config.copy(options = journeyDataV2Minimal.config.options.copy(ukMode = Some(false))))),
         status = OK)
 
       stubKeystore(
         testJourneyId,
-        Json.toJson(testJourneyDataWithMinimalJourneyConfig.copy(
-          config = testJourneyDataWithMinimalJourneyConfig.config.copy(ukMode = Some(false)))),
+        Json.toJson(journeyDataV2Minimal.copy(
+          config = journeyDataV2Minimal.config.copy(options = journeyDataV2Minimal.config.options.copy(ukMode = Some(false))))),
         OK
       )
       stubKeystoreSave(
         testJourneyId,
-        Json.toJson(testJourneyDataWithMinimalJourneyConfig.copy(
-          config = testJourneyDataWithMinimalJourneyConfig.config.copy(ukMode = Some(false)),
+        Json.toJson(journeyDataV2Minimal.copy(
+          config = journeyDataV2Minimal.config.copy(options = journeyDataV2Minimal.config.options.copy(ukMode = Some(false))),
           selectedAddress = Some(testConfirmedAddress.copy(id = None))
         )),
         OK
