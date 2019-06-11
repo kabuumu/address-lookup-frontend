@@ -3,11 +3,11 @@ package controllers
 import itutil.IntegrationSpecBase
 import itutil.config.IntegrationTestConstants._
 import model.JourneyConfig
+import model.JourneyConfigDefaults.English._
 import play.api.http.HeaderNames
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.Json
 import play.api.test.FakeApplication
-import model.JourneyConfigDefaults._
 
 class AddressLookupConfirmPageISpec extends IntegrationSpecBase {
 

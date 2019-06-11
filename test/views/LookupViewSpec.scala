@@ -2,7 +2,7 @@ package views
 
 import controllers.routes
 import forms.ALFForms.lookupForm
-import model.JourneyConfigDefaults._
+import model.JourneyConfigDefaults.English._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.i18n.Messages.Implicits._

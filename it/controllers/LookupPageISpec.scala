@@ -3,9 +3,9 @@ package controllers
 import itutil.IntegrationSpecBase
 import itutil.config.IntegrationTestConstants._
 import itutil.config.PageElementConstants.LookupPage
-import model.JourneyConfigDefaults._
-import play.api.http.Status._
+import model.JourneyConfigDefaults.English._
 import play.api.http.HeaderNames
+import play.api.http.Status._
 import play.api.test.FakeApplication
 
 import scala.util.Random

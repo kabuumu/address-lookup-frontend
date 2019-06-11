@@ -30,13 +30,13 @@ class EditPageISpec extends IntegrationSpecBase {
         document.title shouldBe "Enter the address"
         document.h1.text shouldBe "Enter the address"
         document.submitButton.text shouldBe "Continue"
-        testElementDoesntExist(res,"countryCode")
+        testElementDoesntExist(res, "countryCode")
 
-        document.input("line1") should have (value("1 High Street"))
-        document.input("line2") should have (value("Line 2"))
-        document.input("line3") should have (value("Line 3"))
-        document.input("town") should have (value("Telford"))
-        document.input("postcode") should have (value("AB11 1AB"))
+        document.input("line1") should have(value("1 High Street"))
+        document.input("line2") should have(value("Line 2"))
+        document.input("line3") should have(value("Line 3"))
+        document.input("town") should have(value("Telford"))
+        document.input("postcode") should have(value("AB11 1AB"))
 
         labelForFieldsMatch(res, idOfFieldExpectedLabelTextForFieldMapping = Map(
           "line1" -> "Address line 1",

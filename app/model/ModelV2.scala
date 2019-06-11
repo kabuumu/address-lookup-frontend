@@ -5,11 +5,10 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads.min
 import play.api.libs.json.{Format, JsPath, Json}
 
-case class JourneyDataV2(
-                          config: JourneyConfigV2,
-                          proposals: Option[Seq[ProposedAddress]] = None,
-                          selectedAddress: Option[ConfirmableAddress] = None,
-                          confirmedAddress: Option[ConfirmableAddress] = None
+case class JourneyDataV2(config: JourneyConfigV2,
+                         proposals: Option[Seq[ProposedAddress]] = None,
+                         selectedAddress: Option[ConfirmableAddress] = None,
+                         confirmedAddress: Option[ConfirmableAddress] = None
                         ) {
 
   val resolveConfigV2 = ResolvedJourneyConfigV2(config)
@@ -20,37 +19,38 @@ object JourneyDataV2 {
   implicit val format: Format[JourneyDataV2] = Json.format[JourneyDataV2]
 }
 
-case class JourneyConfigV2(
-                            version: Int,
-                            options: JourneyOptions,
-                            labels: Option[JourneyLabels] = None
+case class JourneyConfigV2(version: Int,
+                           options: JourneyOptions,
+                           labels: Option[JourneyLabels] = None
                           )
 
 case class ResolvedJourneyConfigV2(journeyConfig: JourneyConfigV2) {
   val version: Int = journeyConfig.version
   val options: ResolvedJourneyOptions = ResolvedJourneyOptions(journeyConfig.options)
-  val labels: ResolvedJourneyLabels = ResolvedJourneyLabels(journeyConfig.labels.getOrElse(JourneyLabels()), options.phaseFeedbackLink)
+  val isWelsh: Option[Boolean] = journeyConfig.labels map {
+    labels => labels.cy.isDefined
+  }
+  val labels: ResolvedJourneyLabels = ResolvedJourneyLabels(journeyConfig.labels.getOrElse(JourneyLabels()), options.phaseFeedbackLink, isWelsh = isWelsh.getOrElse(false))
 }
 
 object JourneyConfigV2 {
   implicit val format: Format[JourneyConfigV2] = Json.format[JourneyConfigV2]
 }
 
-case class JourneyOptions(
-                           continueUrl: String,
-                           homeNavHref: Option[String] = None,
-                           additionalStylesheetUrl: Option[String] = None,
-                           phaseFeedbackLink: Option[String] = None,
-                           deskProServiceName: Option[String] = None,
-                           showPhaseBanner: Option[Boolean] = None,
-                           alphaPhase: Option[Boolean] = None,
-                           showBackButtons: Option[Boolean] = None,
-                           includeHMRCBranding: Option[Boolean] = None,
-                           ukMode: Option[Boolean] = None,
-                           allowedCountryCodes: Option[Set[String]] = None,
-                           selectPageConfig: Option[SelectPageConfig] = None,
-                           confirmPageConfig: Option[ConfirmPageConfig] = None,
-                           timeoutConfig: Option[TimeoutConfig] = None
+case class JourneyOptions(continueUrl: String,
+                          homeNavHref: Option[String] = None,
+                          additionalStylesheetUrl: Option[String] = None,
+                          phaseFeedbackLink: Option[String] = None,
+                          deskProServiceName: Option[String] = None,
+                          showPhaseBanner: Option[Boolean] = None,
+                          alphaPhase: Option[Boolean] = None,
+                          showBackButtons: Option[Boolean] = None,
+                          includeHMRCBranding: Option[Boolean] = None,
+                          ukMode: Option[Boolean] = None,
+                          allowedCountryCodes: Option[Set[String]] = None,
+                          selectPageConfig: Option[SelectPageConfig] = None,
+                          confirmPageConfig: Option[ConfirmPageConfig] = None,
+                          timeoutConfig: Option[TimeoutConfig] = None
                          ) {
   val isUkMode: Boolean = ukMode contains true
 }
@@ -79,9 +79,8 @@ object JourneyOptions {
   implicit val format: Format[JourneyOptions] = Json.format[JourneyOptions]
 }
 
-case class SelectPageConfig(
-                             proposalListLimit: Option[Int] = None,
-                             showSearchAgainLink: Option[Boolean] = None
+case class SelectPageConfig(proposalListLimit: Option[Int] = None,
+                            showSearchAgainLink: Option[Boolean] = None
                            )
 
 case class ResolvedSelectPageConfig(selectPageConfig: SelectPageConfig) {
@@ -93,11 +92,10 @@ object SelectPageConfig {
   implicit val format: Format[SelectPageConfig] = Json.format[SelectPageConfig]
 }
 
-case class ConfirmPageConfig(
-                              showSearchAgainLink: Option[Boolean] = None,
-                              showSubHeadingAndInfo: Option[Boolean] = None,
-                              showChangeLink: Option[Boolean] = None,
-                              showConfirmChangeText: Option[Boolean] = None
+case class ConfirmPageConfig(showSearchAgainLink: Option[Boolean] = None,
+                             showSubHeadingAndInfo: Option[Boolean] = None,
+                             showChangeLink: Option[Boolean] = None,
+                             showConfirmChangeText: Option[Boolean] = None
                             )
 
 case class ResolvedConfirmPageConfig(confirmPageConfig: ConfirmPageConfig) {
@@ -111,9 +109,8 @@ object ConfirmPageConfig {
   implicit val format: Format[ConfirmPageConfig] = Json.format[ConfirmPageConfig]
 }
 
-case class TimeoutConfig(
-                          timeoutAmount: Int,
-                          timeoutUrl: String
+case class TimeoutConfig(timeoutAmount: Int,
+                         timeoutUrl: String
                         )
 
 object TimeoutConfig {
@@ -123,26 +120,24 @@ object TimeoutConfig {
     ) (TimeoutConfig.apply, unlift(TimeoutConfig.unapply))
 }
 
-case class JourneyLabels(
-                          en: Option[LanguageLabels] = None,
-                          cy: Option[LanguageLabels] = None
+case class JourneyLabels(en: Option[LanguageLabels] = None,
+                         cy: Option[LanguageLabels] = None
                         )
 
-case class ResolvedJourneyLabels(journeyLabels: JourneyLabels, phaseFeedbackLink: String) {
+case class ResolvedJourneyLabels(journeyLabels: JourneyLabels, phaseFeedbackLink: String, isWelsh: Boolean) {
   val en: ResolvedLanguageLabels = ResolvedLanguageLabels(journeyLabels.en.getOrElse(LanguageLabels()), phaseFeedbackLink)
-  val cy: Option[ResolvedLanguageLabels] = None
+  val cy: Option[ResolvedLanguageLabels] = if (isWelsh) Some(ResolvedLanguageLabels(journeyLabels.cy.getOrElse(LanguageLabels()), phaseFeedbackLink)) else None
 }
 
 object JourneyLabels {
   implicit val format: Format[JourneyLabels] = Json.format[JourneyLabels]
 }
 
-case class LanguageLabels(
-                           appLevelLabels: Option[AppLevelLabels] = None,
-                           selectPageLabels: Option[SelectPageLabels] = None,
-                           lookupPageLabels: Option[LookupPageLabels] = None,
-                           editPageLabels: Option[EditPageLabels] = None,
-                           confirmPageLabels: Option[ConfirmPageLabels] = None
+case class LanguageLabels(appLevelLabels: Option[AppLevelLabels] = None,
+                          selectPageLabels: Option[SelectPageLabels] = None,
+                          lookupPageLabels: Option[LookupPageLabels] = None,
+                          editPageLabels: Option[EditPageLabels] = None,
+                          confirmPageLabels: Option[ConfirmPageLabels] = None
                          )
 
 case class ResolvedLanguageLabels(languageLabels: LanguageLabels, phaseFeedbackLink: String) {
@@ -157,118 +152,113 @@ object LanguageLabels {
   implicit val format: Format[LanguageLabels] = Json.format[LanguageLabels]
 }
 
-case class AppLevelLabels(
-                           navTitle: Option[String] = None,
-                           phaseBannerHtml: Option[String] = None
+case class AppLevelLabels(navTitle: Option[String] = None,
+                          phaseBannerHtml: Option[String] = None
                          )
 
 case class ResolvedAppLevelLabels(appLevelLabels: AppLevelLabels, phaseFeedbackLink: String) {
   val navTitle: Option[String] = appLevelLabels.navTitle
-  val phaseBannerHtml: String = appLevelLabels.phaseBannerHtml.getOrElse(JourneyConfigDefaults.defaultPhaseBannerHtml(phaseFeedbackLink))
+  val phaseBannerHtml: String = appLevelLabels.phaseBannerHtml.getOrElse(JourneyConfigDefaults.English.defaultPhaseBannerHtml(phaseFeedbackLink))
 }
 
 object AppLevelLabels {
   implicit val format: Format[AppLevelLabels] = Json.format[AppLevelLabels]
 }
 
-case class SelectPageLabels(
-                             title: Option[String] = None,
-                             heading: Option[String] = None,
-                             headingWithPostcode: Option[String] = None,
-                             proposalListLabel: Option[String] = None,
-                             submitLabel: Option[String] = None,
-                             searchAgainLinkText: Option[String] = None,
-                             editAddressLinkText: Option[String] = None
+case class SelectPageLabels(title: Option[String] = None,
+                            heading: Option[String] = None,
+                            headingWithPostcode: Option[String] = None,
+                            proposalListLabel: Option[String] = None,
+                            submitLabel: Option[String] = None,
+                            searchAgainLinkText: Option[String] = None,
+                            editAddressLinkText: Option[String] = None
                            )
 
 case class ResolvedSelectPageLabels(selectPageLabels: SelectPageLabels) {
-  val title: String = selectPageLabels.title.getOrElse(JourneyConfigDefaults.SELECT_PAGE_TITLE)
-  val heading: String = selectPageLabels.heading.getOrElse(JourneyConfigDefaults.SELECT_PAGE_HEADING)
-  val headingWithPostcode: String = selectPageLabels.headingWithPostcode.getOrElse(JourneyConfigDefaults.SELECT_PAGE_HEADING_WITH_POSTCODE)
-  val proposalListLabel: String = selectPageLabels.proposalListLabel.getOrElse(JourneyConfigDefaults.SELECT_PAGE_PROPOSAL_LIST_LABEL)
-  val submitLabel: String = selectPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.SELECT_PAGE_SUBMIT_LABEL)
-  val searchAgainLinkText: String = selectPageLabels.searchAgainLinkText.getOrElse(JourneyConfigDefaults.SEARCH_AGAIN_LINK_TEXT)
-  val editAddressLinkText: String = selectPageLabels.editAddressLinkText.getOrElse(JourneyConfigDefaults.EDIT_LINK_TEXT)
+  val title: String = selectPageLabels.title.getOrElse(JourneyConfigDefaults.English.SELECT_PAGE_TITLE)
+  val heading: String = selectPageLabels.heading.getOrElse(JourneyConfigDefaults.English.SELECT_PAGE_HEADING)
+  val headingWithPostcode: String = selectPageLabels.headingWithPostcode.getOrElse(JourneyConfigDefaults.English.SELECT_PAGE_HEADING_WITH_POSTCODE)
+  val proposalListLabel: String = selectPageLabels.proposalListLabel.getOrElse(JourneyConfigDefaults.English.SELECT_PAGE_PROPOSAL_LIST_LABEL)
+  val submitLabel: String = selectPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.English.SELECT_PAGE_SUBMIT_LABEL)
+  val searchAgainLinkText: String = selectPageLabels.searchAgainLinkText.getOrElse(JourneyConfigDefaults.English.SEARCH_AGAIN_LINK_TEXT)
+  val editAddressLinkText: String = selectPageLabels.editAddressLinkText.getOrElse(JourneyConfigDefaults.English.EDIT_LINK_TEXT)
 }
 
 object SelectPageLabels {
   implicit val format: Format[SelectPageLabels] = Json.format[SelectPageLabels]
 }
 
-case class LookupPageLabels(
-                             title: Option[String] = None,
-                             heading: Option[String] = None,
-                             filterLabel: Option[String] = None,
-                             postcodeLabel: Option[String] = None,
-                             submitLabel: Option[String] = None,
-                             noResultsFoundMessage: Option[String] = None,
-                             resultLimitExceededMessage: Option[String] = None,
-                             manualAddressLinkText: Option[String] = None
+case class LookupPageLabels(title: Option[String] = None,
+                            heading: Option[String] = None,
+                            filterLabel: Option[String] = None,
+                            postcodeLabel: Option[String] = None,
+                            submitLabel: Option[String] = None,
+                            noResultsFoundMessage: Option[String] = None,
+                            resultLimitExceededMessage: Option[String] = None,
+                            manualAddressLinkText: Option[String] = None
                            )
 
 case class ResolvedLookupPageLabels(lookupPageLabels: LookupPageLabels) {
-  val title: String = lookupPageLabels.title.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_TITLE)
-  val heading: String = lookupPageLabels.heading.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_HEADING)
-  val filterLabel: String = lookupPageLabels.filterLabel.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_FILTER_LABEL)
-  val postcodeLabel: String = lookupPageLabels.postcodeLabel.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_POSTCODE_LABEL)
-  val submitLabel: String = lookupPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_SUBMIT_LABEL)
+  val title: String = lookupPageLabels.title.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_TITLE)
+  val heading: String = lookupPageLabels.heading.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_HEADING)
+  val filterLabel: String = lookupPageLabels.filterLabel.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_FILTER_LABEL)
+  val postcodeLabel: String = lookupPageLabels.postcodeLabel.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_POSTCODE_LABEL)
+  val submitLabel: String = lookupPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_SUBMIT_LABEL)
   val noResultsFoundMessage: Option[String] = lookupPageLabels.noResultsFoundMessage
   val resultLimitExceededMessage: Option[String] = lookupPageLabels.resultLimitExceededMessage
-  val manualAddressLinkText: String = lookupPageLabels.manualAddressLinkText.getOrElse(JourneyConfigDefaults.LOOKUP_PAGE_MANUAL_ADDRESS_LINK_TEXT)
+  val manualAddressLinkText: String = lookupPageLabels.manualAddressLinkText.getOrElse(JourneyConfigDefaults.English.LOOKUP_PAGE_MANUAL_ADDRESS_LINK_TEXT)
 }
 
 object LookupPageLabels {
   implicit val format: Format[LookupPageLabels] = Json.format[LookupPageLabels]
 }
 
-case class EditPageLabels(
-                           title: Option[String] = None,
-                           heading: Option[String] = None,
-                           line1Label: Option[String] = None,
-                           line2Label: Option[String] = None,
-                           line3Label: Option[String] = None,
-                           townLabel: Option[String] = None,
-                           postcodeLabel: Option[String] = None,
-                           countryLabel: Option[String] = None,
-                           submitLabel: Option[String] = None
+case class EditPageLabels(title: Option[String] = None,
+                          heading: Option[String] = None,
+                          line1Label: Option[String] = None,
+                          line2Label: Option[String] = None,
+                          line3Label: Option[String] = None,
+                          townLabel: Option[String] = None,
+                          postcodeLabel: Option[String] = None,
+                          countryLabel: Option[String] = None,
+                          submitLabel: Option[String] = None
                          )
 
 case class ResolvedEditPageLabels(editPageLabels: EditPageLabels) {
-  val title: String = editPageLabels.title.getOrElse(JourneyConfigDefaults.EDIT_PAGE_TITLE)
-  val heading: String = editPageLabels.heading.getOrElse(JourneyConfigDefaults.EDIT_PAGE_HEADING)
-  val line1Label: String = editPageLabels.line1Label.getOrElse(JourneyConfigDefaults.EDIT_PAGE_LINE1_LABEL)
-  val line2Label: String = editPageLabels.line2Label.getOrElse(JourneyConfigDefaults.EDIT_PAGE_LINE2_LABEL)
-  val line3Label: String = editPageLabels.line3Label.getOrElse(JourneyConfigDefaults.EDIT_PAGE_LINE3_LABEL)
-  val townLabel: String = editPageLabels.townLabel.getOrElse(JourneyConfigDefaults.EDIT_PAGE_TOWN_LABEL)
-  val postcodeLabel: String = editPageLabels.postcodeLabel.getOrElse(JourneyConfigDefaults.EDIT_PAGE_POSTCODE_LABEL)
-  val countryLabel: String = editPageLabels.countryLabel.getOrElse(JourneyConfigDefaults.EDIT_PAGE_COUNTRY_LABEL)
-  val submitLabel: String = editPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.EDIT_PAGE_SUBMIT_LABEL)
+  val title: String = editPageLabels.title.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_TITLE)
+  val heading: String = editPageLabels.heading.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_HEADING)
+  val line1Label: String = editPageLabels.line1Label.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_LINE1_LABEL)
+  val line2Label: String = editPageLabels.line2Label.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_LINE2_LABEL)
+  val line3Label: String = editPageLabels.line3Label.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_LINE3_LABEL)
+  val townLabel: String = editPageLabels.townLabel.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_TOWN_LABEL)
+  val postcodeLabel: String = editPageLabels.postcodeLabel.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_POSTCODE_LABEL)
+  val countryLabel: String = editPageLabels.countryLabel.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_COUNTRY_LABEL)
+  val submitLabel: String = editPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.English.EDIT_PAGE_SUBMIT_LABEL)
 }
 
 object EditPageLabels {
   implicit val format: Format[EditPageLabels] = Json.format[EditPageLabels]
 }
 
-case class ConfirmPageLabels(
-                              title: Option[String] = None,
-                              heading: Option[String] = None,
-                              infoSubheading: Option[String] = None,
-                              infoMessage: Option[String] = None,
-                              submitLabel: Option[String] = None,
-                              searchAgainLinkText: Option[String] = None,
-                              changeLinkText: Option[String] = None,
-                              confirmChangeText: Option[String] = None
+case class ConfirmPageLabels(title: Option[String] = None,
+                             heading: Option[String] = None,
+                             infoSubheading: Option[String] = None,
+                             infoMessage: Option[String] = None,
+                             submitLabel: Option[String] = None,
+                             searchAgainLinkText: Option[String] = None,
+                             changeLinkText: Option[String] = None,
+                             confirmChangeText: Option[String] = None
                             )
 
 case class ResolvedConfirmPageLabels(confirmPageLabels: ConfirmPageLabels) {
-  val title: String = confirmPageLabels.title.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_TITLE)
-  val heading: String = confirmPageLabels.heading.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_HEADING)
-  val infoSubheading: String = confirmPageLabels.infoSubheading.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_INFO_SUBHEADING)
-  val infoMessage: String = confirmPageLabels.infoMessage.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_INFO_MESSAGE_HTML)
-  val submitLabel: String = confirmPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_SUBMIT_LABEL)
-  val searchAgainLinkText: String = confirmPageLabels.searchAgainLinkText.getOrElse(JourneyConfigDefaults.SEARCH_AGAIN_LINK_TEXT)
-  val changeLinkText: String = confirmPageLabels.changeLinkText.getOrElse(JourneyConfigDefaults.CONFIRM_PAGE_EDIT_LINK_TEXT)
-  val confirmChangeText: String = confirmPageLabels.confirmChangeText.getOrElse(JourneyConfigDefaults.CONFIRM_CHANGE_TEXT)
+  val title: String = confirmPageLabels.title.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_TITLE)
+  val heading: String = confirmPageLabels.heading.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_HEADING)
+  val infoSubheading: String = confirmPageLabels.infoSubheading.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_INFO_SUBHEADING)
+  val infoMessage: String = confirmPageLabels.infoMessage.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_INFO_MESSAGE_HTML)
+  val submitLabel: String = confirmPageLabels.submitLabel.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_SUBMIT_LABEL)
+  val searchAgainLinkText: String = confirmPageLabels.searchAgainLinkText.getOrElse(JourneyConfigDefaults.English.SEARCH_AGAIN_LINK_TEXT)
+  val changeLinkText: String = confirmPageLabels.changeLinkText.getOrElse(JourneyConfigDefaults.English.CONFIRM_PAGE_EDIT_LINK_TEXT)
+  val confirmChangeText: String = confirmPageLabels.confirmChangeText.getOrElse(JourneyConfigDefaults.English.CONFIRM_CHANGE_TEXT)
 }
 
 object ConfirmPageLabels {

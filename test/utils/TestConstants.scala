@@ -179,33 +179,32 @@ object TestConstants {
                                     testShowSearchAgainLink: Option[Boolean] = Confirm.showSearchAgainLink,
                                     testShowSubHeading: Option[Boolean] = Confirm.showSubHeading,
                                     testShowChangeLink: Option[Boolean] = Confirm.showChangeLink,
-                                    testshowConfirmChangeLink: Option[Boolean]= Confirm.showConfirmChangeLink,
+                                    testshowConfirmChangeLink: Option[Boolean] = Confirm.showConfirmChangeLink,
                                     testTimeoutConfig: Option[TimeoutConfig] = fullV2TimeoutConfig): JourneyDataV2 = {
 
     val testConfirmPageConfig = ConfirmPageConfig(testShowSearchAgainLink,
-                                                  testShowSubHeading,
-                                                  testShowChangeLink,
-                                                  testshowConfirmChangeLink)
+      testShowSubHeading,
+      testShowChangeLink,
+      testshowConfirmChangeLink)
 
     val journeyOptions = JourneyOptions(testContinueUrl,
-                                        testHomeNavHref,
-                                        testAdditionalStylesheetUrl,
-                                        testPhaseFeedbackLink,
-                                        testDeskProServiceName,
-                                        testShowPhaseBanner,
-                                        testAlphaPhase,
-                                        testShowBackButtons,
-                                        testIncludeHMRCBranding,
-                                        testUkMode,
-                                        testAllowedCountryCodes,
-                                        testSelectPage,
-                                        Some(testConfirmPageConfig),
-                                        testTimeoutConfig)
+      testHomeNavHref,
+      testAdditionalStylesheetUrl,
+      testPhaseFeedbackLink,
+      testDeskProServiceName,
+      testShowPhaseBanner,
+      testAlphaPhase,
+      testShowBackButtons,
+      testIncludeHMRCBranding,
+      testUkMode,
+      testAllowedCountryCodes,
+      testSelectPage,
+      Some(testConfirmPageConfig),
+      testTimeoutConfig)
 
 
     JourneyDataV2(JourneyConfigV2(2, journeyOptions, fullV2JourneyLabelsEn), Some(testProposedAddressSeq), Some(testAddress), Some(testAddress))
   }
-
 
 
   val emptyJson: JsValue = Json.parse("{}")
@@ -366,6 +365,88 @@ object TestConstants {
             confirmChangeText = Some("cyConfirmPageConfirmChangeText")
           ))
         ))
+      ))
+    )
+  )
+
+  val testJourneyDataV2EnglishOnly = JourneyDataV2(
+    config = JourneyConfigV2(
+      version = 2,
+      options = JourneyOptions(
+        continueUrl = "testContinueUrl",
+        homeNavHref = Some("tesNavtHref"),
+        additionalStylesheetUrl = Some("testStylesheetUrl"),
+        phaseFeedbackLink = Some("testFeedbackLink"),
+        deskProServiceName = Some("testDeskproName"),
+        showPhaseBanner = Some(true),
+        alphaPhase = Some(true),
+        showBackButtons = Some(true),
+        includeHMRCBranding = Some(true),
+        ukMode = Some(true),
+        allowedCountryCodes = Some(Set("UK", "FR")),
+        selectPageConfig = Some(SelectPageConfig(
+          proposalListLimit = Some(30),
+          showSearchAgainLink = Some(true)
+        )),
+        confirmPageConfig = Some(ConfirmPageConfig(
+          showSearchAgainLink = Some(true),
+          showSubHeadingAndInfo = Some(true),
+          showChangeLink = Some(true),
+          showConfirmChangeText = Some(true)
+        )),
+        timeoutConfig = Some(TimeoutConfig(
+          timeoutAmount = 120,
+          timeoutUrl = "testTimeoutUrl"
+        ))
+      ),
+      labels = Some(JourneyLabels(
+        en = Some(LanguageLabels(
+          appLevelLabels = Some(AppLevelLabels(
+            navTitle = Some("enNavTitle"),
+            phaseBannerHtml = Some("enPhaseBannerHtml")
+          )),
+          selectPageLabels = Some(SelectPageLabels(
+            title = Some("enSelectPageTitle"),
+            heading = Some("enSelectPageHeading"),
+            headingWithPostcode = Some("enSelectPageHeadingWithPostcode"),
+            proposalListLabel = Some("enProposalListLabel"),
+            submitLabel = Some("enSubmitLabel"),
+            searchAgainLinkText = Some("enSearchAgainLinkText"),
+            editAddressLinkText = Some("enEditAddressLinkText")
+          )),
+          lookupPageLabels = Some(LookupPageLabels(
+            title = Some("enLookupPageTitle"),
+            heading = Some("enLookupPageHeading"),
+            filterLabel = Some("enFilterLabel"),
+            postcodeLabel = Some("enPostcodeLabel"),
+            submitLabel = Some("enSubmitLabel"),
+            noResultsFoundMessage = Some("enNoResultsFoundMessage"),
+            resultLimitExceededMessage = Some("enResultLimitExceededMessage"),
+            manualAddressLinkText = Some("enManualAddressLinkText")
+          )),
+          editPageLabels = Some(EditPageLabels(
+            title = Some("enEditPageTitle"),
+            heading = Some("enEditPageHeading"),
+            line1Label = Some("enEditPageLine1Label"),
+            line2Label = Some("enEditPageLine2Label"),
+            line3Label = Some("enEditPageLine3Label"),
+            townLabel = Some("enEditPageTownLabel"),
+            postcodeLabel = Some("enEditPagePostcodeLabel"),
+            countryLabel = Some("enEditPageCountryLabel"),
+            submitLabel = Some("enEditPageSubmitLabel")
+          )),
+          confirmPageLabels = Some(ConfirmPageLabels(
+            title = Some("enConfirmPageTitle"),
+            heading = Some("enConfirmPageHeading"),
+            infoSubheading = Some("enConfirmPageInfoSubheading"),
+            infoMessage = Some("enConfirmPageInfoMessage"),
+            submitLabel = Some("enConfirmPageSubmitLabel"),
+            searchAgainLinkText = Some("enConfirmPageSearchAgainLinkText"),
+            changeLinkText = Some("enConfirmPageChangeLinkText"),
+            confirmChangeText = Some("enConfirmPageConfirmChangeText")
+          ))
+        )),
+        cy = None
       ))
     )
   )
@@ -713,14 +794,14 @@ object TestConstants {
             appLevelLabels = None,
             selectPageLabels = None,
             lookupPageLabels = Some(LookupPageLabels(
-               title = Some("enLookupPageTitle"),
-               heading = Some("enLookupPageHeading"),
-               filterLabel = Some("enFilterLabel"),
-               postcodeLabel = Some("enPostcodeLabel"),
-               submitLabel = Some("enSubmitLabel"),
-               noResultsFoundMessage = Some("enNoResultsFoundMessage"),
-               resultLimitExceededMessage = Some("enResultLimitExceededMessage"),
-               manualAddressLinkText = Some("enManualAddressLinkText")
+              title = Some("enLookupPageTitle"),
+              heading = Some("enLookupPageHeading"),
+              filterLabel = Some("enFilterLabel"),
+              postcodeLabel = Some("enPostcodeLabel"),
+              submitLabel = Some("enSubmitLabel"),
+              noResultsFoundMessage = Some("enNoResultsFoundMessage"),
+              resultLimitExceededMessage = Some("enResultLimitExceededMessage"),
+              manualAddressLinkText = Some("enManualAddressLinkText")
             )),
             editPageLabels = None,
             confirmPageLabels = None
