@@ -66,6 +66,7 @@ class AddressLookupController @Inject()(journeyRepository: JourneyRepository, ad
   // GET  /:id/select
   def select(id: String) = Action.async { implicit req =>
     withFutureJourneyV2(id) { journeyData =>
+      val isWelsh = getWelshContent(journeyData)
       lookupForm.bindFromRequest().fold(
         errors => Future.successful((None, BadRequest(views.html.v2.lookup(id, journeyData, errors,isWelsh = getWelshContent(journeyData))))),
         lookup => {
@@ -73,7 +74,7 @@ class AddressLookupController @Inject()(journeyRepository: JourneyRepository, ad
           handleLookup(id, journeyData, lookup) map {
             case OneResult(address) => Some(journeyData.copy(selectedAddress = Some(address.toConfirmableAddress(id)))) -> Redirect(routes.AddressLookupController.confirm(id))
             case ResultsList(addresses, firstLookup) => Some(journeyData.copy(proposals = Some(addresses))) ->
-              Ok(views.html.v2.select(id, journeyData, selectForm, Proposals(Some(addresses)), Some(lookupWithFormattedPostcode), firstLookup))
+              Ok(views.html.v2.select(id, journeyData, selectForm, Proposals(Some(addresses)), Some(lookupWithFormattedPostcode), firstLookup, isWelsh))
             case TooManyResults(addresses, firstLookup) => None -> Ok(views.html.v2.too_many_results(id, journeyData, lookupWithFormattedPostcode, firstLookup))
             case NoResults => None -> Ok(views.html.v2.no_results(id, journeyData, lookupWithFormattedPostcode.postcode))
           }
@@ -101,15 +102,16 @@ class AddressLookupController @Inject()(journeyRepository: JourneyRepository, ad
   // POST /:id/select
   def handleSelect(id: String) = Action.async { implicit req =>
     withJourneyV2(id) { journeyData =>
+      val isWelsh = getWelshContent(journeyData)
       val bound = selectForm.bindFromRequest()
       bound.fold(
-        errors => (None, BadRequest(views.html.v2.select(id, journeyData, errors, Proposals(journeyData.proposals), None, firstSearch = true))),
+        errors => (None, BadRequest(views.html.v2.select(id, journeyData, errors, Proposals(journeyData.proposals), None, firstSearch = true, welshEnabled = isWelsh))),
         selection => {
           journeyData.proposals match {
             case Some(props) => {
               props.find(_.addressId == selection.addressId) match {
                 case Some(addr) => (Some(journeyData.copy(selectedAddress = Some(addr.toConfirmableAddress(id)))), Redirect(routes.AddressLookupController.confirm(id)))
-                case None => (None, BadRequest(views.html.v2.select(id, journeyData, bound, Proposals(Some(props)), None, firstSearch = true)))
+                case None => (None, BadRequest(views.html.v2.select(id, journeyData, bound, Proposals(Some(props)), None, firstSearch = true, welshEnabled = isWelsh)))
               }
             }
             case None => (None, Redirect(routes.AddressLookupController.lookup(id)))
