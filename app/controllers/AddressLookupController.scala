@@ -80,7 +80,7 @@ class AddressLookupController @Inject()(journeyRepository: JourneyRepository, ad
           handleLookup(id, journeyData, lookup) map {
             case OneResult(address) => Some(journeyData.copy(selectedAddress = Some(address.toConfirmableAddress(id)))) -> Redirect(routes.AddressLookupController.confirm(id))
             case ResultsList(addresses, firstLookup) => Some(journeyData.copy(proposals = Some(addresses))) ->
-              Ok(views.html.v2.select(id, journeyData, selectForm, Proposals(Some(addresses)), Some(lookupWithFormattedPostcode), firstLookup))
+              Ok(views.html.v2.select(id, journeyData, selectForm, Proposals(Some(addresses)), Some(lookupWithFormattedPostcode), firstLookup, isWelsh))
             case TooManyResults(addresses, firstLookup) => None -> Ok(views.html.v2.too_many_results(id, journeyData, lookupWithFormattedPostcode, firstLookup))
             case NoResults => None -> Ok(views.html.v2.no_results(id, journeyData, lookupWithFormattedPostcode.postcode))
           }

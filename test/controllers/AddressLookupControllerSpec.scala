@@ -469,16 +469,30 @@ class AddressLookupControllerSpec
       header(HeaderNames.LOCATION, res) must be(Some(routes.AddressLookupController.confirm("foo").url))
     }
 
-    "display a list of proposals given postcode and filter parameters" in new Scenario(
+    "display a list of  english proposals given postcode and filter parameters" in new Scenario(
       journeyDataV2 = Map("foo" -> basicJourneyV2()),
       proposals = Seq(ProposedAddress("GB1234567890", "ZZ11 1ZZ"), ProposedAddress("GB1234567891", "ZZ11 1ZZ"))
     ) {
       val res = controller.select("foo").apply(req.withFormUrlEncodedBody("postcode" -> "ZZ11 1ZZ"))
       val html = contentAsString(res).asBodyFragment
+      html should include element withClass("form-title").withValue("Choose the address")
       html should include element withName("input").withAttrValue("type", "radio").withAttrValue("name", "addressId").withAttrValue("value", "GB1234567890")
       html should include element withName("input").withAttrValue("type", "radio").withAttrValue("name", "addressId").withAttrValue("value", "GB1234567891")
       html should include element withName("button").withAttrValue("type", "submit").withValue("Continue")
     }
+
+    "display a list of welsh proposals given postcode and filter parameters" in new Scenario(
+      journeyDataV2 = Map("foo" -> testDefaultCYJourneyConfigV2),
+      proposals = Seq(ProposedAddress("GB1234567890", "ZZ11 1ZZ"), ProposedAddress("GB1234567891", "ZZ11 1ZZ"))
+    ) {
+      val res = controller.select("foo").apply(reqWelsh.withFormUrlEncodedBody("postcode" -> "ZZ11 1ZZ"))
+      val html = contentAsString(res).asBodyFragment
+      html should include element withClass("form-title").withValue("Dewiswch y cyfeiriad")
+      html should include element withName("input").withAttrValue("type", "radio").withAttrValue("name", "addressId").withAttrValue("value", "GB1234567890")
+      html should include element withName("input").withAttrValue("type", "radio").withAttrValue("name", "addressId").withAttrValue("value", "GB1234567891")
+      html should include element withName("button").withAttrValue("type", "submit").withValue("Yn eich blaen")
+    }
+
   }
 
   "handle select" should {
